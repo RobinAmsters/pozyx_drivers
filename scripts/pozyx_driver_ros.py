@@ -2,6 +2,7 @@
 
 import rospy
 import pypozyx
+import tf
 from pypozyx import *
 from std_msgs.msg import Header
 from geometry_msgs.msg import *
@@ -57,6 +58,7 @@ class ReadyToLocalize(object):
 
         if status == POZYX_SUCCESS:
             pub_pose_with_cov.publish(pwc)
+	    frame_pub.sendTransform((pwc.pose.pose.position.x, pwc.pose.pose.position.y,  pwc.pose.pose.position.z), (pwc.pose.pose.orientation.x, pwc.pose.pose.orientation.y, pwc.pose.pose.orientation.z, pwc.pose.pose.orientation.w), pwc.header.stamp, "pozyx","odom")
 
         #Topic 2: IMU
         imu = Imu()
@@ -184,7 +186,7 @@ if __name__ == "__main__":
     anchor2_coordinates = eval(rospy.get_param('~anchor2_coordinates'))
     anchor3_coordinates = eval(rospy.get_param('~anchor3_coordinates'))
 
-    algorithm = int(rospy.get_param('~algorithm'))
+   # algorithm = int(rospy.get_param('~algorithm'))
     dimension = int(rospy.get_param('~dimension'))
     height    = int(rospy.get_param('~height'))
     frequency = int(rospy.get_param('~frequency'))
@@ -201,6 +203,7 @@ if __name__ == "__main__":
     pub_anchor4_info = rospy.Publisher('~anchor_info_3', AnchorInfo, queue_size=1)
     pub_pose = rospy.Publisher('~pose', PoseStamped , queue_size=1)
     pub_pressure = rospy.Publisher('~pressure', FluidPressure , queue_size=1)
+    frame_pub = tf.TransformBroadcaster() 
 
     anchors = [DeviceCoordinates(anchor0_id, 1, Coordinates(anchor0_coordinates[0], anchor0_coordinates[1], anchor0_coordinates[2])),
                DeviceCoordinates(anchor1_id, 1, Coordinates(anchor1_coordinates[0], anchor1_coordinates[1], anchor1_coordinates[2])),
@@ -211,7 +214,7 @@ if __name__ == "__main__":
 
     # Starting communication with Pozyx
     pozyx = PozyxSerial(serial_port)
-    rdl = ReadyToLocalize(pozyx, anchors, world_frame_id, tag_frame_id, algorithm, dimension, height)
+    rdl = ReadyToLocalize(pozyx, anchors, world_frame_id, tag_frame_id, dimension=dimension, height=height)
     rdl.setup()
     while not rospy.is_shutdown():
         rdl.loop()
