@@ -171,7 +171,8 @@ class ReadyToLocalize(object):
 
 if __name__ == "__main__":
 
-    serial_port = get_serial_ports()[0].device
+    serial_port = rospy.get_param('pozyx_port')
+  # serial_orig = get_serial_ports()[0].device # original way of obtaining serial port
 
     rospy.init_node('pozyx_node')
 
